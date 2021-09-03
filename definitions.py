@@ -103,3 +103,22 @@ def apply_defaults(username):
     #subprocess.call("powershell.exe REG LOAD HKEY_USERS\\" +store2+ r" 'C:\Users\\" +username+ r"NTUSER.DAT'; " + "Set-ItemProperty 'Registry::HKEY_USERS\\" + store2 + r"\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce' -Name 'DefaultSetup' -Value 'C:\UTIL\Project\defaultsetup.ps1' -Type 'String'")
     #subprocess.call("powershell.exe REG UNLOAD HKEY_USERS\\" +store2)
     
+def menu():
+    choices = ['1','2','3','4','5','6','7','8','9']
+    chances = 4
+    value = 0
+    while chances != 0:
+        chances = chances - 1
+        print("Welcome to the automated installer, please select an option:\n"
+        " 1. Install Office Only\n 2. Install Connectwise Only\n 3. Install BitDefender Only\n 4. Install Applications "
+        "Only\n 5. Install All\n 6. Install Connectwise and BitDefender only\n 7. Quit\n 9. Install Applications and Office only")
+        value = input("What is your selection: ")
+        if value in choices:
+            break
+        elif chances == 0:
+            print('You have responded incorrectly too many time, the program will now exit, please re-run the program and try again')
+            exit()
+        else:
+            print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
+    return value
+
