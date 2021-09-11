@@ -2,14 +2,8 @@ import definitions
 import ctypes
 import sys
 
-def is_admin():
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
-    except:
-        return False
-
-if is_admin():
-    definitions.menu()
+if definitions.is_admin():
+    value = definitions.menu()
 
     if value == "1":
         definitions.office_install()
@@ -53,6 +47,14 @@ if is_admin():
     else:
         print("Skipping network configuration...")
 
+    power = input("Do you want to configure power settings? Y/N: ")
+    if power.lower() == "y":
+        print("Configuring power settings...")
+        definitions.powersettings()
+        
+    else:
+        print("Skipping power settings.")
+
     #powershell command to set protocol defaults and file type association defaults for target user. needs variable to hold username, and variable to hold password. dependent on setfta.ps1. must be ran AFTER user creation is completed
     #can be cleaned up using variables to hold commands in between semi-colons. 
     #currently sets chrome as default, adobe reader, and outlook for target user from admin context. will affect user, not admin.
@@ -71,4 +73,4 @@ if is_admin():
 
 else:
     # Re-run the program with admin rights
-    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, "InstallScript.exe".join(sys.argv[1:]), None, 1)
+    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv[1:]), None, 1)

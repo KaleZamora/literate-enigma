@@ -3,7 +3,7 @@ import os
 import glob
 from getpass import getpass
 from winreg import *
-
+import ctypes
 
 def agent_install():
     folder="C:\Program Files (x86)\ScreenConnect Client*"
@@ -121,4 +121,22 @@ def menu():
         else:
             print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
     return value
+
+def powersettings():
+    subprocess.call("powercfg /x monitor-timeout-ac 0")
+    subprocess.call("powercfg /x monitor-timeout-dc 0")
+    subprocess.call("powercfg /x disk-timeout-ac 0")
+    subprocess.call("powercfg /x disk-timeout-dc 0")
+    subprocess.call("powercfg /x standby-timeout-ac 0")
+    subprocess.call("powercfg /x standby-timeout-dc 0")
+    subprocess.call("powercfg /x hibernate-timeout-ac 0")
+    subprocess.call("powercfg /x hibernate-timeout-dc 0")
+    subprocess.call("powercfg /x processor-throttle-ac none")
+    subprocess.call("powercfg /x processor-throttle-dc none")
+
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
 
