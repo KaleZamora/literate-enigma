@@ -39,7 +39,7 @@ if definitions.is_admin():
         definitions.office_install()
       
 
-    yn = input("Do you want to configure the network settings? Y/N: ")
+    yn = definitions.netmenu()
     if yn.lower() == "y":
         print('Configuring network settings')
         definitions.network_settings()
@@ -47,7 +47,7 @@ if definitions.is_admin():
     else:
         print("Skipping network configuration...")
 
-    power = input("Do you want to configure power settings? Y/N: ")
+    power = definitions.powermenu()
     if power.lower() == "y":
         print("Configuring power settings...")
         definitions.powersettings()
@@ -62,7 +62,7 @@ if definitions.is_admin():
     #        r"start-process powershell.exe -argumentlist 'import-module c:\util\project\setfta.ps1; set-pta chromehtml http; set-pta chromehtml https; set-fta AcroExch.Document.DC .pdf; set-pta Outlook.URL.mailto.15 mailto; set-fta chromehtml .html'"
     #        r" -Credential (New-Object System.Management.Automation.PSCredential " + str(current_computer_name)+"\\"+username+",$password)", shell=True)
 
-    yn = input("Do you want to create a user? Y/N: ")
+    yn = definitions.usermenu()
     if yn.lower() == "y":    
         definitions.apply_defaults(definitions.create_user())
     

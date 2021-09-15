@@ -18,7 +18,7 @@ def bitdefender_install():
 def applications_install():
     folder="C:\Program Files\WindowsApps\Microsoft.VCLibs*"
     
-    if not glob.glob(folder,recursive=False):
+    if len(glob.glob(folder,recursive=False)) < 4:
         subprocess.call(r"powershell.exe Add-AppPackage -Path 'C:\UTIL\Project\Microsoft.VCLibs.x64.14.00.Desktop.appx'", shell=True)
     #output_arr = []
     ##output_arr.append(subprocess.check_output(r"powershell.exe get-appxpackage Microsoft.VCLibs.140.00.UWPDesktop", shell=True))
@@ -31,6 +31,7 @@ def applications_install():
     subprocess.call(r"powershell.exe Add-AppPackage -Path 'C:\UTIL\Project\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle'", shell=True)
     subprocess.call(r"powershell.exe winget install --id=Oracle.JavaRuntimeEnvironment; winget install --id=Google.Chrome; winget install --id=Mozilla.Firefox; winget install --id=Microsoft.RemoteDesktopClient; winget install --id=Adobe.AdobeAcrobatReaderDC; winget install --id=JAMSoftware.TreeSizeFree", shell=True)
 
+    
 def office_install():
     os.system(r"C:\Util\Project\setup.exe /configure C:\UTIL\Project\Configuration_test.xml")
     
@@ -140,3 +141,45 @@ def is_admin():
     except:
         return False
 
+
+def netmenu():
+    chances = 4
+    yn = ""
+    while chances != 0:
+        chances = chances - 1
+        yn = input("Do you want to configure the network settings? Y/N: "
+        if yn == "Y" or "y":
+            break
+        elif chances == 0:
+            print('You have responded incorrectly too many time, the program will now skip configuring network settings')
+        else:
+            print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
+    return yn
+
+def powermenu():
+    chances = 4
+    power = ""
+    while chances != 0:
+        chances = chances - 1
+        power = input("Do you want to configure the power settings? Y/N: "
+        if power == "Y" or "y":
+            break
+        elif chances == 0:
+            print('You have responded incorrectly too many time, the program will now skip configuring power settings')
+        else:
+            print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
+    return power
+
+def usermenu():
+    chances = 4
+    yn = ""
+    while chances != 0:
+        chances = chances - 1
+        yn = input("Do you want to create a user? Y/N: "
+        if yn == "Y" or "y":
+            break
+        elif chances == 0:
+            print('You have responded incorrectly too many time, the program will now skip creating a user')
+        else:
+            print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
+    return yn
