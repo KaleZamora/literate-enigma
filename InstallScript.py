@@ -69,6 +69,13 @@ if definitions.is_admin():
     else:
         print("Skipping user creation...")
 
+    yn = definitions.comp_name_menu()
+    if yn.lower() == "y":
+        new_computer_name=input("Please enter the new Computer Name: ")
+        subprocess.call(r"powershell.exe Rename-Computer -NewName "+new_computer_name,shell=True)
+
+    else:
+        print("Skipping machine renaming...")
 
 
 else:

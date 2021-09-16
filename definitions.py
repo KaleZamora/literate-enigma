@@ -143,43 +143,77 @@ def is_admin():
 
 
 def netmenu():
+    yes = ["Y","y"]
+    no = ["N", "n"]
     chances = 4
     yn = ""
     while chances != 0:
         chances = chances - 1
-        yn = input("Do you want to configure the network settings? Y/N: "
-        if yn == "Y" or "y":
+        yn = input("Do you want to configure the network settings? Y/N: ")
+        if yn in yes:
+            break
+        elif yn in no:
             break
         elif chances == 0:
             print('You have responded incorrectly too many time, the program will now skip configuring network settings')
+            break
         else:
             print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
     return yn
 
 def powermenu():
+    yes = ["Y","y"]
+    no = ["N", "n"]
     chances = 4
     power = ""
     while chances != 0:
         chances = chances - 1
-        power = input("Do you want to configure the power settings? Y/N: "
-        if power == "Y" or "y":
+        power = input("Do you want to configure the power settings? Y/N: ")
+        if power in yes:
+            break
+        elif power in no:
             break
         elif chances == 0:
             print('You have responded incorrectly too many time, the program will now skip configuring power settings')
+            break
         else:
             print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
     return power
 
 def usermenu():
+    yes = ["Y","y"]
+    no = ["N", "n"]
     chances = 4
     yn = ""
     while chances != 0:
         chances = chances - 1
-        yn = input("Do you want to create a user? Y/N: "
-        if yn == "Y" or "y":
+        yn = input("Do you want to create a user? Y/N: ")
+        if yn in yes:
+            break
+        elif yn in no:
             break
         elif chances == 0:
             print('You have responded incorrectly too many time, the program will now skip creating a user')
+            break
+        else:
+            print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
+    return yn
+
+def comp_name_menu():
+    yes = ["Y","y"]
+    no = ["N", "n"]
+    chances = 4
+    yn = ""
+    while chances != 0:
+        chances = chances - 1
+        yn = input("Do you want to rename the machine? Y/N: ")
+        if yn in yes:
+            break
+        elif yn in no:
+            break
+        elif chances == 0:
+            print('You have responded incorrectly too many time, the program will now skip renaming the machine')
+            break
         else:
             print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
     return yn
