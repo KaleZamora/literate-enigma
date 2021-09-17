@@ -57,7 +57,7 @@ def computer_rename():
     #powershell command to rename computer. uncomment when variable is setup with computer name
     #current_computer_name=subprocess.call(r"powershell.exe [System.Net.Dns]::GetHostByName($env:computerName).hostname", shell=True)
     new_computer_name=input("Please enter the new Computer Name: ")
-    subprocess.call(r"powershell.exe Rename-Computer -NewName "+new_computer_name,shell=True)
+    subprocess.call(r"powershell.exe Rename-Computer -NewName '"+new_computer_name+"'",shell=True)
 
 def create_user():
     subprocess.call(r"powershell.exe Set-ExecutionPolicy RemoteSigned -Scope LocalMachine -Force")
@@ -143,77 +143,98 @@ def is_admin():
 
 
 def netmenu():
-    yes = ["Y","y"]
-    no = ["N", "n"]
+    yes = "y"
+    no = "n"
     chances = 4
     yn = ""
     while chances != 0:
         chances = chances - 1
         yn = input("Do you want to configure the network settings? Y/N: ")
-        if yn in yes:
+        if yn == yes:
+            print('Configuring network settings')
+            network_settings()
             break
-        elif yn in no:
+        elif yn == no:
+            print("Skipping network configuration...")
             break
         elif chances == 0:
             print('You have responded incorrectly too many time, the program will now skip configuring network settings')
+            print("Skipping network configuration...")
             break
         else:
             print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
-    return yn
+    #return yn
 
 def powermenu():
-    yes = ["Y","y"]
-    no = ["N", "n"]
+    yes = "y"
+    no = "n"
     chances = 4
     power = ""
     while chances != 0:
         chances = chances - 1
-        power = input("Do you want to configure the power settings? Y/N: ")
-        if power in yes:
+        power = input("Do you want to configure the power settings? Y/N: ").lower()
+        if power == yes:
+            print("Configuring power settings...")
+            powersettings()
             break
-        elif power in no:
+        elif power == no:
+            print("Skipping power settings.")
             break
         elif chances == 0:
             print('You have responded incorrectly too many time, the program will now skip configuring power settings')
+            print("Skipping power settings.")
             break
         else:
             print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
-    return power
+    #return power
 
 def usermenu():
-    yes = ["Y","y"]
-    no = ["N", "n"]
+    yes = "y"
+    no = "n"
     chances = 4
     yn = ""
     while chances != 0:
         chances = chances - 1
-        yn = input("Do you want to create a user? Y/N: ")
-        if yn in yes:
+        yn = input("Do you want to create a user? Y/N: ").lower()
+        if yn == yes:
+            apply_defaults(create_user())
             break
-        elif yn in no:
+        elif yn == no:
+             print("Skipping user creation...")
             break
         elif chances == 0:
             print('You have responded incorrectly too many time, the program will now skip creating a user')
+            print("Skipping user creation...")
             break
         else:
             print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
-    return yn
 
 def comp_name_menu():
-    yes = ["Y","y"]
-    no = ["N", "n"]
+    yes = "y"
+    no = "n"
     chances = 4
     yn = ""
     while chances != 0:
         chances = chances - 1
-        yn = input("Do you want to rename the machine? Y/N: ")
-        if yn in yes:
+        yn = input("Do you want to rename the machine? Y/N: ").lower()
+        if yn == yes:
+            new_computer_name=input("Please enter the new Computer Name: ")
+            subprocess.call(r"powershell.exe Rename-Computer -NewName '"+new_computer_name+"'",shell=True)
             break
-        elif yn in no:
+        elif yn == no:
+            print("Skipping computer rename...")
             break
         elif chances == 0:
             print('You have responded incorrectly too many time, the program will now skip renaming the machine')
+            print("Skipping computer rename...")
             break
         else:
-            print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
-    return yn
+            print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining"
+    #answer=input("Do you want to rename the machine? Y/N: ").lower()
+    #if answer=="y":
+    #    new_computer_name=input("Please enter the new Computer Name: ")
+    #    subprocess.call(r"powershell.exe Rename-Computer -NewName '"+new_computer_name+"'",shell=True)
+    #else:
+    #    print("Skipping computer rename...")
+
+    #return yn
