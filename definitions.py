@@ -186,7 +186,6 @@ def powermenu():
             break
         else:
             print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
-    #return power
 
 def usermenu():
     yes = "y"
@@ -200,7 +199,7 @@ def usermenu():
             apply_defaults(create_user())
             break
         elif yn == no:
-             print("Skipping user creation...")
+            print("Skipping user creation...")
             break
         elif chances == 0:
             print('You have responded incorrectly too many time, the program will now skip creating a user')
@@ -229,12 +228,4 @@ def comp_name_menu():
             print("Skipping computer rename...")
             break
         else:
-            print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining"
-    #answer=input("Do you want to rename the machine? Y/N: ").lower()
-    #if answer=="y":
-    #    new_computer_name=input("Please enter the new Computer Name: ")
-    #    subprocess.call(r"powershell.exe Rename-Computer -NewName '"+new_computer_name+"'",shell=True)
-    #else:
-    #    print("Skipping computer rename...")
-
-    #return yn
+            print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining.")
