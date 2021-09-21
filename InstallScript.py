@@ -19,13 +19,13 @@ if definitions.is_admin():
       
     elif value == "5":
         definitions.applications_install()
-        definitions.agent_install()
         definitions.bitdefender_install()
         definitions.office_install()
+        definitions.agent_install()
       
     elif value == "6":
-        definitions.agent_install()
         definitions.bitdefender_install()
+        definitions.agent_install()
     
     elif value == "7":
         print("Goodbye!")

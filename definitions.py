@@ -1,3 +1,8 @@
+#subprocess is for calling powershell and start process. 
+#os is for cmd prompt calls
+#glob is for using wildcards and other regex like features
+#getpass is used to get a password from stdin but block it out for privacy
+
 import subprocess
 import os
 import glob
@@ -5,33 +10,31 @@ from getpass import getpass
 from winreg import *
 import ctypes
 
+#folder is assigned the path to screenconnect client but with a wildcard symbol (*). glob then treats that as a wildcard, searches the directory for anything matching screen connect client and reports the output.
+#if nothing matches the query, the net step is to install the agent.
+
 def agent_install():
     folder="C:\Program Files (x86)\ScreenConnect Client*"
     if not glob.glob(folder,recursive=False):
         os.system(r"msiexec /i C:\UTIL\Project\Agent_Install.msi /qb") 
-        
+
+#same as before, check the directory to see if it exists, if not, install the program. Needs an else        
 def bitdefender_install():
     folder="C:\Program Files\Bitdefender"
     if not os.path.isdir(folder):
         os.system(r"msiexec /i C:\UTIL\Project\eps_installer_signed.msi /qb GZ_PACKAGE_ID=aHR0cHM6Ly9jbG91ZC1lY3MuZ3Jhdml0eXpvbmUuYml0ZGVmZW5kZXIuY29tL1BhY2thZ2VzL0JTVFdJTi8wL0RlUkQ0WS9pbnN0YWxsZXIueG1sP2xhbmc9ZW4tVVM=")
 
+#vclibs is a dependancy of winget. globs reports how many instances of vclibs exist and if it's less than the necessary 4, we install vclibs followed by winget and then followed by all the programs winget installs.
 def applications_install():
     folder="C:\Program Files\WindowsApps\Microsoft.VCLibs*"
     
     if len(glob.glob(folder,recursive=False)) < 4:
         subprocess.call(r"powershell.exe Add-AppPackage -Path 'C:\UTIL\Project\Microsoft.VCLibs.x64.14.00.Desktop.appx'", shell=True)
-    #output_arr = []
-    ##output_arr.append(subprocess.check_output(r"powershell.exe get-appxpackage Microsoft.VCLibs.140.00.UWPDesktop", shell=True))
-    #output_arr.append(subprocess.check_output(r"powershell.exe get-appxpackage Microsoft.VCLibs.140.00", shell=True))
-
-    #for i in output_arr:
-    #    if not i.decode('utf-8'):
-    #        subprocess.call(r"powershell.exe Add-AppPackage -Path 'C:\UTIL\Project\Microsoft.VCLibs.x64.14.00.Desktop.appx'", shell=True)
 
     subprocess.call(r"powershell.exe Add-AppPackage -Path 'C:\UTIL\Project\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle'", shell=True)
     subprocess.call(r"powershell.exe winget install --id=Oracle.JavaRuntimeEnvironment; winget install --id=Google.Chrome; winget install --id=Mozilla.Firefox; winget install --id=Microsoft.RemoteDesktopClient; winget install --id=Adobe.AdobeAcrobatReaderDC; winget install --id=JAMSoftware.TreeSizeFree", shell=True)
 
-    
+#call to cmd to run setup.exe to install office.
 def office_install():
     os.system(r"C:\Util\Project\setup.exe /configure C:\UTIL\Project\Configuration_test.xml")
     
@@ -59,6 +62,11 @@ def computer_rename():
     new_computer_name=input("Please enter the new Computer Name: ")
     subprocess.call(r"powershell.exe Rename-Computer -NewName '"+new_computer_name+"'",shell=True)
 
+#function to setup user through powershell calls after getting info from user via stdin. the name is converted into the format required (eg gherrera). it's then added to a group (either standard or admin).
+# !! must be able to specify if it's a standard user or an admin user !!
+#This part here also gives powershell the ability to run scripts that are unsigned because it will be running a script later via task scheduler by itself without python
+#the username won't appear in the login shell until you reboot the computer.
+#it returns the username and password as a tuple which gets sent into apply_defaults
 def create_user():
     subprocess.call(r"powershell.exe Set-ExecutionPolicy RemoteSigned -Scope LocalMachine -Force")
     fname=input("Please enter the user's first name: ")
@@ -75,6 +83,9 @@ def create_user():
     subprocess.call(r"powershell.exe New-LocalUser "+ username + " -Password (ConvertTo-SecureString " +pass_key+ " -AsPlainText -Force) -FullName '" + fname + " " + lname + "'; Add-LocalGroupMember -Group 'Users' -Member " + username + ";",shell=True)
     return username,pass_key
 
+#this is a mess, but the gist of it is this: we get the computername to append it to the username and add a forward slash (eg WORKSTATION3\gherrera) in order to create a scheduled task that runs on login that runs a script that sets defaults how we want them to.
+#defaults here meaning use adobe for default pdf reader, use chrome for html, use outlook for mail.to items etc. 
+#currently, windows fights back and resets defaults on occasion for arbitrary reasons.
 def apply_defaults(username):
     current_computer_name=((subprocess.check_output(r"powershell.exe [System.Net.Dns]::GetHostByName($env:computerName).hostname", shell=True)).decode('utf-8')).strip()
     action=r"(New-ScheduledTaskAction -execute powershell.exe -Argument c:\util\project\defaultsetup.ps1)"
@@ -85,24 +96,6 @@ def apply_defaults(username):
     
     subprocess.call(r"powershell.exe start-process powershell.exe -argumentlist '"+arguments+"' ", shell=True)
     
-    #aKey = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList"
-    #aReg = ConnectRegistry(None, HKEY_LOCAL_MACHINE)
-    #store1 = 0
-    #store2 = 0
-    #aKey = OpenKey(aReg, aKey)
-    #for i in range(10):
-    #    asubkey_name = EnumKey(aKey, i)
-    #    print(asubkey_name)
-    #    asubkey = OpenKey(aKey, asubkey_name)
-    #    print(asubkey)
-    #    val = QueryValueEx(asubkey, r"ProfileImagePath")
-    #    store = str(val)
-    #    if username in store:
-    #        store2 = str(asubkey_name)
-
-    #subprocess.call("powershell.exe REG LOAD HKEY_USERS\\" +store2+ r" 'C:\Users\\" +username+ r"NTUSER.DAT'; " + "New-Item 'Registry::HKEY_USERS\\" + store2 + r"\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce'")
-    #subprocess.call("powershell.exe REG LOAD HKEY_USERS\\" +store2+ r" 'C:\Users\\" +username+ r"NTUSER.DAT'; " + "Set-ItemProperty 'Registry::HKEY_USERS\\" + store2 + r"\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce' -Name 'DefaultSetup' -Value 'C:\UTIL\Project\defaultsetup.ps1' -Type 'String'")
-    #subprocess.call("powershell.exe REG UNLOAD HKEY_USERS\\" +store2)
     
 def menu():
     choices = ['1','2','3','4','5','6','7','8','9']
@@ -123,6 +116,7 @@ def menu():
             print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
     return value
 
+#simple string of calls to powershell to run powercfg. need to supress output or redirect it to a log or some such.
 def powersettings():
     subprocess.call("powercfg /x monitor-timeout-ac 0")
     subprocess.call("powercfg /x monitor-timeout-dc 0")
@@ -135,97 +129,88 @@ def powersettings():
     subprocess.call("powercfg /x processor-throttle-ac none")
     subprocess.call("powercfg /x processor-throttle-dc none")
 
+#ctypes is used here to check to see if the user is running the program as admin. Need to stdout a message that tells the user to try again as admin.
 def is_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
     except:
         return False
 
-
+#default network settings are applied.
 def netmenu():
-    yes = "y"
-    no = "n"
-    chances = 4
-    yn = ""
-    while chances != 0:
-        chances = chances - 1
-        yn = input("Do you want to configure the network settings? Y/N: ")
-        if yn == yes:
+    flag=1
+    #chances = 4
+    while flag != 0:
+        yn=input("Do you want to configure the network settings? Y/N: ").lower()
+        #chances = chances - 1
+        if yn == "y":
             print('Configuring network settings')
             network_settings()
-            break
-        elif yn == no:
+            flag=0
+        elif yn == "n":
             print("Skipping network configuration...")
-            break
-        elif chances == 0:
-            print('You have responded incorrectly too many time, the program will now skip configuring network settings')
-            print("Skipping network configuration...")
-            break
+            flag=0
+        #elif chances == 0:
+        #    print('You have responded incorrectly too many time, the program will now skip configuring network settings')
+        #    print("Skipping network configuration...")
+        #    break
         else:
-            print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
+            print("Invalid choice. Please try again...")
+            #print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
     #return yn
-
+#power settings are applied.
 def powermenu():
-    yes = "y"
-    no = "n"
-    chances = 4
-    power = ""
-    while chances != 0:
-        chances = chances - 1
-        power = input("Do you want to configure the power settings? Y/N: ").lower()
-        if power == yes:
+    flag=1
+    while flag != 0:
+        #chances = chances - 1
+        yn = input("Do you want to configure the power settings? Y/N: ").lower()
+        if yn == "y":
             print("Configuring power settings...")
             powersettings()
-            break
-        elif power == no:
+            flag=0
+        elif yn == "n":
             print("Skipping power settings.")
-            break
-        elif chances == 0:
-            print('You have responded incorrectly too many time, the program will now skip configuring power settings')
-            print("Skipping power settings.")
-            break
+            flag=0
+        #else:
+        #    print('You have responded incorrectly too many time, the program will now skip configuring power settings')
+        #    print("Skipping power settings.")
+        #    break
         else:
-            print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
-
+            print("Invalid choice. Please try again...")
+#apply defaults is chained with create user. whatever create user returns is sent to apply defaults
 def usermenu():
-    yes = "y"
-    no = "n"
-    chances = 4
-    yn = ""
-    while chances != 0:
-        chances = chances - 1
+    flag=1
+    while flag != 0:
+        #chances = chances - 1
         yn = input("Do you want to create a user? Y/N: ").lower()
-        if yn == yes:
+        if yn == "y":
             apply_defaults(create_user())
-            break
-        elif yn == no:
+            flag=0
+        elif yn == "n":
             print("Skipping user creation...")
-            break
-        elif chances == 0:
-            print('You have responded incorrectly too many time, the program will now skip creating a user')
-            print("Skipping user creation...")
-            break
+            flag=0
+        #elif chances == 0:
+        #    print('You have responded incorrectly too many time, the program will now skip creating a user')
+        #    print("Skipping user creation...")
+        #    break
         else:
-            print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
-
+            print("Invalid choice. Please try again...")
+#function to rename the computer. first it asks for a new name and then it calls on powershell to change it.
 def comp_name_menu():
-    yes = "y"
-    no = "n"
-    chances = 4
-    yn = ""
-    while chances != 0:
-        chances = chances - 1
+    flag=1
+    while flag != 0:
+        #chances = chances - 1
         yn = input("Do you want to rename the machine? Y/N: ").lower()
-        if yn == yes:
+        if yn == "y":
             new_computer_name=input("Please enter the new Computer Name: ")
             subprocess.call(r"powershell.exe Rename-Computer -NewName '"+new_computer_name+"'",shell=True)
-            break
-        elif yn == no:
+            flag=0
+        elif yn == "n":
             print("Skipping computer rename...")
-            break
-        elif chances == 0:
-            print('You have responded incorrectly too many time, the program will now skip renaming the machine')
-            print("Skipping computer rename...")
-            break
+            flag=0
+        #elif chances == 0:
+        #    print('You have responded incorrectly too many time, the program will now skip renaming the machine')
+        #    print("Skipping computer rename...")
+        #    break
         else:
-            print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining.")
+            print("Invalid choice. Please try again..")
