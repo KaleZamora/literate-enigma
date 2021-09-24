@@ -9,6 +9,7 @@ import glob
 from getpass import getpass
 from winreg import *
 import ctypes
+import re
 
 #folder is assigned the path to screenconnect client but with a wildcard symbol (*). glob then treats that as a wildcard, searches the directory for anything matching screen connect client and reports the output.
 #if nothing matches the query, the net step is to install the agent.
@@ -24,7 +25,20 @@ def bitdefender_install():
     folder="C:\Program Files\Bitdefender"
     if not os.path.isdir(folder):
         dirname = os.path.dirname(os.path.realpath(__file__))
-        os.system(r"msiexec /i " + dirname + "\eps_installer_signed.msi /qb GZ_PACKAGE_ID=aHR0cHM6Ly9jbG91ZC1lY3MuZ3Jhdml0eXpvbmUuYml0ZGVmZW5kZXIuY29tL1BhY2thZ2VzL0JTVFdJTi8wL0RlUkQ0WS9pbnN0YWxsZXIueG1sP2xhbmc9ZW4tVVM=")
+        dirname = os.path.dirname(os.path.realpath(__file__))
+        inst = False
+        holder = ""
+        folder = "setupdownloader"
+        for root in os.walk(dirname):
+            for name in root:
+                for i in name:
+                    if folder in i:
+                        holder = i
+                        inst = False
+                    else:
+                        continue
+        info = re.search("\[" + "(.+?)" + "\]", holder).group(1)
+        os.system(r"msiexec /i " + dirname + "\eps_installer_signed.msi /qb GZ_PACKAGE_ID" + info)
 
 #vclibs is a dependancy of winget. globs reports how many instances of vclibs exist and if it's less than the necessary 4, we install vclibs followed by winget and then followed by all the programs winget installs.
 def applications_install():
@@ -91,7 +105,7 @@ def create_user():
         if yn3 == "y":
             subprocess.call("powershell.exe AddLocalGroupMember -Group 'Administrators' -Member '" +username+ "'")
             flag2 = 0
-        elif yn3 = "n":
+        elif yn3 == "n":
             print("Skipping admin elevation...")
             flag2 = 0
         else:
@@ -102,7 +116,7 @@ def create_user():
 #defaults here meaning use adobe for default pdf reader, use chrome for html, use outlook for mail.to items etc. 
 #currently, windows fights back and resets defaults on occasion for arbitrary reasons.
 def apply_defaults(username):
-    dirname = os.path.dirname(os.path.realpath(__file__)))
+    dirname = os.path.dirname(os.path.realpath(__file__))
     current_computer_name=((subprocess.check_output(r"powershell.exe [System.Net.Dns]::GetHostByName($env:computerName).hostname", shell=True)).decode('utf-8')).strip()
     action=r"(New-ScheduledTaskAction -execute powershell.exe -Argument " + dirname + "\defaultsetup.ps1)"
     trigger=r"(New-ScheduledTaskTrigger -atlogon)"
