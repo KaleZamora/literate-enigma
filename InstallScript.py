@@ -57,6 +57,7 @@ if definitions.is_admin():
     #Computer rename
     definitions.comp_name_menu()
 
+    definitions.restart_menu()
 
 else:
     # Re-run the program with admin rights
