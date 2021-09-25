@@ -10,6 +10,7 @@ from getpass import getpass
 from winreg import *
 import ctypes
 import re
+import sys
 
 #folder is assigned the path to screenconnect client but with a wildcard symbol (*). glob then treats that as a wildcard, searches the directory for anything matching screen connect client and reports the output.
 #if nothing matches the query, the net step is to install the agent.
@@ -24,36 +25,33 @@ def agent_install():
 def bitdefender_install():
     folder="C:\Program Files\Bitdefender"
     if not os.path.isdir(folder):
-        dirname = os.path.dirname(os.path.realpath(__file__))
-        dirname = os.path.dirname(os.path.realpath(__file__))
-        inst = False
+        dirname = os.path.dirname(os.path.realpath(sys.executable))
         holder = ""
-        folder = "setupdownloader"
+        begin = "setupdownloader"
         for root in os.walk(dirname):
             for name in root:
                 for i in name:
-                    if folder in i:
+                    if begin in i:
                         holder = i
-                        inst = False
                     else:
                         continue
         info = re.search("\[" + "(.+?)" + "\]", holder).group(1)
-        os.system(r"msiexec /i " + dirname + "\eps_installer_signed.msi /qb GZ_PACKAGE_ID" + info)
+        os.system(r"msiexec /i " + dirname + "\eps_installer_signed.msi /qb GZ_PACKAGE_ID=" + info)
 
 #vclibs is a dependancy of winget. globs reports how many instances of vclibs exist and if it's less than the necessary 4, we install vclibs followed by winget and then followed by all the programs winget installs.
 def applications_install():
     folder="C:\Program Files\WindowsApps\Microsoft.VCLibs*"
     
     if len(glob.glob(folder,recursive=False)) < 4:
-        dirname = os.path.dirname(os.path.realpath(__file__))
+        dirname = os.path.dirname(os.path.realpath(sys.executable))
         subprocess.call(r"powershell.exe Add-AppPackage -Path '" + dirname + "\Microsoft.VCLibs.x64.14.00.Desktop.appx'", shell=True)
-    dirname = os.path.dirname(os.path.realpath(__file__))
+    dirname = os.path.dirname(os.path.realpath(sys.executable))
     subprocess.call(r"powershell.exe Add-AppPackage -Path '" + dirname + "\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle'", shell=True)
     subprocess.call(r"powershell.exe winget install --id=Oracle.JavaRuntimeEnvironment; winget install --id=Google.Chrome; winget install --id=Mozilla.Firefox; winget install --id=Microsoft.RemoteDesktopClient; winget install --id=Adobe.AdobeAcrobatReaderDC; winget install --id=JAMSoftware.TreeSizeFree", shell=True)
 
 #call to cmd to run setup.exe to install office.
 def office_install():
-    dirname = os.path.dirname(os.path.realpath(__file__))
+    dirname = os.path.dirname(os.path.realpath(sys.executable))
     os.system("" + dirname + r"\setup.exe /configure " + dirname + "\Configuration_test.xml")
     
 def network_settings():
@@ -116,7 +114,7 @@ def create_user():
 #defaults here meaning use adobe for default pdf reader, use chrome for html, use outlook for mail.to items etc. 
 #currently, windows fights back and resets defaults on occasion for arbitrary reasons.
 def apply_defaults(username):
-    dirname = os.path.dirname(os.path.realpath(__file__))
+    dirname = dirname = os.path.dirname(os.path.realpath(sys.executable))
     current_computer_name=((subprocess.check_output(r"powershell.exe [System.Net.Dns]::GetHostByName($env:computerName).hostname", shell=True)).decode('utf-8')).strip()
     action=r"(New-ScheduledTaskAction -execute powershell.exe -Argument " + dirname + "\defaultsetup.ps1)"
     trigger=r"(New-ScheduledTaskTrigger -atlogon)"
@@ -257,4 +255,8 @@ def restart_menu():
             print("Skipping restart...")
             flag4 = 0
         else:
-            print("Invalid choice. Please try again..")   
+            print("Invalid choice. Please try again..")
+            
+def myexcepthook(type, value, traceback, oldhook=sys.excepthook):
+    oldhook(type, value, traceback)
+    input("Press RETURN. ")    # use input() in Python 3.x

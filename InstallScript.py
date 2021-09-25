@@ -2,6 +2,8 @@ import definitions
 import ctypes
 import sys
 
+sys.excepthook = definitions.myexcepthook
+
 if definitions.is_admin():
     value = definitions.menu()
 
