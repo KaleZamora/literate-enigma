@@ -17,7 +17,7 @@ import sys
 
 def agent_install():
     folder="C:\Program Files (x86)\ScreenConnect Client*"
-    dirname = os.path.dirname(os.path.realpath(__file__))
+    dirname = os.path.dirname(os.path.realpath(sys.executable))
     if not glob.glob(folder,recursive=False):
         os.system(r"msiexec /i " + dirname + "\Agent_Install.msi /qb") 
 
