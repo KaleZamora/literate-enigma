@@ -7,7 +7,7 @@ Requirements to build:
 pip
 pyinstaller
 
-How to build:
+How to build the online version:
 
 1. Clone the repo, cd into it.
 2. $pip3 install pyinstaller if you don't already have it.
