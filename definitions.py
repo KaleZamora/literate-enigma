@@ -43,7 +43,6 @@ def applications_install():
 
 #call to cmd to run setup.exe to install office by first downloading the files and then installing them.
 def office_install():
-    os.system(dirname + r"\setup.exe /download " + dirname + "\Configuration_test.xml")
     os.system(dirname + r"\setup.exe /configure " + dirname + "\Configuration_test.xml")
     
 def network_settings():
