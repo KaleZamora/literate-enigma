@@ -9,34 +9,50 @@ import glob
 from getpass import getpass
 from winreg import *
 import ctypes
+import re
+import sys
 
 #folder is assigned the path to screenconnect client but with a wildcard symbol (*). glob then treats that as a wildcard, searches the directory for anything matching screen connect client and reports the output.
 #if nothing matches the query, the net step is to install the agent.
 
 def agent_install():
     folder="C:\Program Files (x86)\ScreenConnect Client*"
+    dirname = os.path.dirname(os.path.realpath(sys.executable))
     if not glob.glob(folder,recursive=False):
-        os.system(r"msiexec /i C:\UTIL\Project\Agent_Install.msi /qb") 
+        os.system(r"msiexec /i " + dirname + "\Agent_Install.msi /qb") 
 
 #same as before, check the directory to see if it exists, if not, install the program. Needs an else        
 def bitdefender_install():
     folder="C:\Program Files\Bitdefender"
     if not os.path.isdir(folder):
-        os.system(r"msiexec /i C:\UTIL\Project\eps_installer_signed.msi /qb GZ_PACKAGE_ID=aHR0cHM6Ly9jbG91ZC1lY3MuZ3Jhdml0eXpvbmUuYml0ZGVmZW5kZXIuY29tL1BhY2thZ2VzL0JTVFdJTi8wL0RlUkQ0WS9pbnN0YWxsZXIueG1sP2xhbmc9ZW4tVVM=")
+        dirname = os.path.dirname(os.path.realpath(sys.executable))
+        holder = ""
+        begin = "setupdownloader"
+        for root in os.walk(dirname):
+            for name in root:
+                for i in name:
+                    if begin in i:
+                        holder = i
+                    else:
+                        continue
+        info = re.search("\[" + "(.+?)" + "\]", holder).group(1)
+        os.system(r"msiexec /i " + dirname + "\eps_installer_signed.msi /qb GZ_PACKAGE_ID=" + info)
 
 #vclibs is a dependancy of winget. globs reports how many instances of vclibs exist and if it's less than the necessary 4, we install vclibs followed by winget and then followed by all the programs winget installs.
 def applications_install():
     folder="C:\Program Files\WindowsApps\Microsoft.VCLibs*"
     
     if len(glob.glob(folder,recursive=False)) < 4:
-        subprocess.call(r"powershell.exe Add-AppPackage -Path 'C:\UTIL\Project\Microsoft.VCLibs.x64.14.00.Desktop.appx'", shell=True)
-
-    subprocess.call(r"powershell.exe Add-AppPackage -Path 'C:\UTIL\Project\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle'", shell=True)
+        dirname = os.path.dirname(os.path.realpath(sys.executable))
+        subprocess.call(r"powershell.exe Add-AppPackage -Path '" + dirname + "\Microsoft.VCLibs.x64.14.00.Desktop.appx'", shell=True)
+    dirname = os.path.dirname(os.path.realpath(sys.executable))
+    subprocess.call(r"powershell.exe Add-AppPackage -Path '" + dirname + "\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle'", shell=True)
     subprocess.call(r"powershell.exe winget install --id=Oracle.JavaRuntimeEnvironment; winget install --id=Google.Chrome; winget install --id=Mozilla.Firefox; winget install --id=Microsoft.RemoteDesktopClient; winget install --id=Adobe.AdobeAcrobatReaderDC; winget install --id=JAMSoftware.TreeSizeFree", shell=True)
 
 #call to cmd to run setup.exe to install office.
 def office_install():
-    os.system(r"C:\Util\Project\setup.exe /configure C:\UTIL\Project\Configuration_test.xml")
+    dirname = os.path.dirname(os.path.realpath(sys.executable))
+    os.system("" + dirname + r"\setup.exe /configure " + dirname + "\Configuration_test.xml")
     
 def network_settings():
     #create registry key named private and a dword named autosetup and set it to 0 to prevent windows from setting up network devices
@@ -81,14 +97,26 @@ def create_user():
     username="".join(map(str, lnamelist))
     pass_key=getpass("Please enter the user's password: ")
     subprocess.call(r"powershell.exe New-LocalUser "+ username + " -Password (ConvertTo-SecureString " +pass_key+ " -AsPlainText -Force) -FullName '" + fname + " " + lname + "'; Add-LocalGroupMember -Group 'Users' -Member " + username + ";",shell=True)
+    flag2 = 1
+    while flag2 != 0:
+        yn3 = input("Do you want to make this user an administrator? Y/N: ").lower()
+        if yn3 == "y":
+            subprocess.call("powershell.exe AddLocalGroupMember -Group 'Administrators' -Member '" +username+ "'")
+            flag2 = 0
+        elif yn3 == "n":
+            print("Skipping admin elevation...")
+            flag2 = 0
+        else:
+            print("Invalid choice. Please try again...")
     return username,pass_key
 
 #this is a mess, but the gist of it is this: we get the computername to append it to the username and add a forward slash (eg WORKSTATION3\gherrera) in order to create a scheduled task that runs on login that runs a script that sets defaults how we want them to.
 #defaults here meaning use adobe for default pdf reader, use chrome for html, use outlook for mail.to items etc. 
 #currently, windows fights back and resets defaults on occasion for arbitrary reasons.
 def apply_defaults(username):
+    dirname = dirname = os.path.dirname(os.path.realpath(sys.executable))
     current_computer_name=((subprocess.check_output(r"powershell.exe [System.Net.Dns]::GetHostByName($env:computerName).hostname", shell=True)).decode('utf-8')).strip()
-    action=r"(New-ScheduledTaskAction -execute powershell.exe -Argument c:\util\project\defaultsetup.ps1)"
+    action=r"(New-ScheduledTaskAction -execute powershell.exe -Argument " + dirname + "\defaultsetup.ps1)"
     trigger=r"(New-ScheduledTaskTrigger -atlogon)"
     credentials=r"-Credential (New-Object System.Management.Automation.PSCredential " +str(current_computer_name)+"\\"+str(username[0])+",(ConvertTo-SecureString " +str(username[1])+ " -AsPlainText -Force))"
     principal=r"(New-ScheduledTaskPrincipal -UserId "+username[0]+" -LogonType ServiceAccount)"
@@ -214,3 +242,21 @@ def comp_name_menu():
         #    break
         else:
             print("Invalid choice. Please try again..")
+
+def restart_menu():
+    flag4 = 1
+    while flag4 != 0:
+        yn4 = input("Would you like to restart now? Y/N: ").lower()
+        if yn4 == "y":
+            print("Restarting in 30 seconds.")
+            subprocess.call("shutdown -r -t 0030")
+            flag4 = 0
+        elif yn4 == "n":
+            print("Skipping restart...")
+            flag4 = 0
+        else:
+            print("Invalid choice. Please try again..")
+            
+def myexcepthook(type, value, traceback, oldhook=sys.excepthook):
+    oldhook(type, value, traceback)
+    input("Press RETURN. ")    # use input() in Python 3.x
