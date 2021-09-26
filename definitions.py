@@ -7,17 +7,19 @@ import subprocess
 import os
 import glob
 from getpass import getpass
-from winreg import *
 import ctypes
 import re
 import sys
 
+
+dirname = os.getcwd()
+
 #folder is assigned the path to screenconnect client but with a wildcard symbol (*). glob then treats that as a wildcard, searches the directory for anything matching screen connect client and reports the output.
-#if nothing matches the query, the net step is to install the agent.
+#if nothing matches the query, the next step is to install the agent.
 
 def agent_install():
     folder="C:\Program Files (x86)\ScreenConnect Client*"
-    dirname = os.path.dirname(os.path.realpath(sys.executable))
+    
     if not glob.glob(folder,recursive=False):
         os.system(r"msiexec /i " + dirname + "\Agent_Install.msi /qb") 
 
@@ -25,11 +27,9 @@ def agent_install():
 def bitdefender_install():
     folder="C:\Program Files\Bitdefender"
     if not os.path.isdir(folder):
-        dirname = os.path.dirname(os.path.realpath(sys.executable))
-        begin = "setupdownloader_[*"
-        middle = glob.glob(begin)
-        end = middle[0]
-        info = re.search("\[" + "(.+?)" + "\]", end).group(1)
+        file_target = "setupdownloader*"
+        results = glob.glob(file_target)
+        info = re.search("\[" + "(.+?)" + "\]", results[0]).group(1)
         os.system(r"msiexec /i " + dirname + "\eps_installer_signed.msi /qb GZ_PACKAGE_ID=" + info)
 
 #vclibs is a dependancy of winget. globs reports how many instances of vclibs exist and if it's less than the necessary 4, we install vclibs followed by winget and then followed by all the programs winget installs.
@@ -37,16 +37,13 @@ def applications_install():
     folder="C:\Program Files\WindowsApps\Microsoft.VCLibs*"
     
     if len(glob.glob(folder,recursive=False)) < 4:
-        dirname = os.path.dirname(os.path.realpath(sys.executable))
         subprocess.call(r"powershell.exe Add-AppPackage -Path '" + dirname + "\Microsoft.VCLibs.x64.14.00.Desktop.appx'", shell=True)
-    dirname = os.path.dirname(os.path.realpath(sys.executable))
     subprocess.call(r"powershell.exe Add-AppPackage -Path '" + dirname + "\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle'", shell=True)
     subprocess.call(r"powershell.exe winget install --id=Oracle.JavaRuntimeEnvironment; winget install --id=Google.Chrome; winget install --id=Mozilla.Firefox; winget install --id=Microsoft.RemoteDesktopClient; winget install --id=Adobe.AdobeAcrobatReaderDC; winget install --id=JAMSoftware.TreeSizeFree", shell=True)
 
-#call to cmd to run setup.exe to install office.
+#call to cmd to run setup.exe to install office by first downloading the files and then installing them.
 def office_install():
-    dirname = os.path.dirname(os.path.realpath(sys.executable))
-    os.system("" + dirname + r"\setup.exe /configure " + dirname + "\Configuration_test.xml")
+    os.system(dirname + r"\setup.exe /configure " + dirname + "\Configuration_test.xml")
     
 def network_settings():
     #create registry key named private and a dword named autosetup and set it to 0 to prevent windows from setting up network devices
@@ -91,15 +88,15 @@ def create_user():
     username="".join(map(str, lnamelist))
     pass_key=getpass("Please enter the user's password: ")
     subprocess.call(r"powershell.exe New-LocalUser "+ username + " -Password (ConvertTo-SecureString " +pass_key+ " -AsPlainText -Force) -FullName '" + fname + " " + lname + "'; Add-LocalGroupMember -Group 'Users' -Member " + username + ";",shell=True)
-    flag2 = 1
-    while flag2 != 0:
-        yn3 = input("Do you want to make this user an administrator? Y/N: ").lower()
-        if yn3 == "y":
+    flag = 1
+    while flag != 0:
+        yn = input("Do you want to make this user an administrator? Y/N: ").lower()
+        if yn == "y":
             subprocess.call("powershell.exe AddLocalGroupMember -Group 'Administrators' -Member '" +username+ "'")
-            flag2 = 0
-        elif yn3 == "n":
+            flag = 0
+        elif yn == "n":
             print("Skipping admin elevation...")
-            flag2 = 0
+            flag = 0
         else:
             print("Invalid choice. Please try again...")
     return username,pass_key
@@ -108,34 +105,30 @@ def create_user():
 #defaults here meaning use adobe for default pdf reader, use chrome for html, use outlook for mail.to items etc. 
 #currently, windows fights back and resets defaults on occasion for arbitrary reasons.
 def apply_defaults(username):
-    dirname = dirname = os.path.dirname(os.path.realpath(sys.executable))
+
     current_computer_name=((subprocess.check_output(r"powershell.exe [System.Net.Dns]::GetHostByName($env:computerName).hostname", shell=True)).decode('utf-8')).strip()
     action=r"(New-ScheduledTaskAction -execute powershell.exe -Argument " + dirname + "\defaultsetup.ps1)"
     trigger=r"(New-ScheduledTaskTrigger -atlogon)"
     credentials=r"-Credential (New-Object System.Management.Automation.PSCredential " +str(current_computer_name)+"\\"+str(username[0])+",(ConvertTo-SecureString " +str(username[1])+ " -AsPlainText -Force))"
     principal=r"(New-ScheduledTaskPrincipal -UserId "+username[0]+" -LogonType ServiceAccount)"
-    arguments=r"register-scheduledtask -action "+action+" -trigger "+trigger+" -principal "+principal+" -taskname pls -taskpath defaults -description fta_scheduled_task"#; get-scheduledtask pls"
+    arguments=r"register-scheduledtask -action "+action+" -trigger "+trigger+" -principal "+principal+" -taskname User_Defaults -taskpath defaults -description fta_scheduled_task"
     
     subprocess.call(r"powershell.exe start-process powershell.exe -argumentlist '"+arguments+"' ", shell=True)
     
     
 def menu():
     choices = ['1','2','3','4','5','6','7','8','9']
-    chances = 4
+    chances = 1
     value = 0
     while chances != 0:
-        chances = chances - 1
         print("Welcome to the automated installer, please select an option:\n"
         " 1. Install Office Only\n 2. Install Connectwise Only\n 3. Install BitDefender Only\n 4. Install Applications "
         "Only\n 5. Install All\n 6. Install Connectwise and BitDefender only\n 7. Quit\n 9. Install Applications and Office only")
         value = input("What is your selection: ")
         if value in choices:
-            break
-        elif chances == 0:
-            print('You have responded incorrectly too many time, the program will now exit, please re-run the program and try again')
-            exit()
+            chances=0
         else:
-            print("you have made an incorrect choice, please chose again, you have " + str(chances) + " chances remaining")
+            print("Incorrect choice. Please try again...")
     return value
 
 #simple string of calls to powershell to run powercfg. need to supress output or redirect it to a log or some such.
@@ -238,16 +231,16 @@ def comp_name_menu():
             print("Invalid choice. Please try again..")
 
 def restart_menu():
-    flag4 = 1
-    while flag4 != 0:
-        yn4 = input("Would you like to restart now? Y/N: ").lower()
-        if yn4 == "y":
+    flag = 1
+    while flag != 0:
+        yn = input("Would you like to restart now? Y/N: ").lower()
+        if yn == "y":
             print("Restarting in 30 seconds.")
             subprocess.call("shutdown -r -t 0030")
-            flag4 = 0
-        elif yn4 == "n":
+            flag = 0
+        elif yn == "n":
             print("Skipping restart...")
-            flag4 = 0
+            flag = 0
         else:
             print("Invalid choice. Please try again..")
             
