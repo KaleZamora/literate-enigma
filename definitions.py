@@ -6,7 +6,6 @@
 import subprocess
 import os
 import glob
-import InstallScript-Online
 from getpass import getpass
 import ctypes
 import re
@@ -29,7 +28,7 @@ def bitdefender_install():
     folder="C:\Program Files\Bitdefender"
     if not os.path.isdir(folder):
         file_target = "setupdownloader*"
-        results = glob.glob(begin)
+        results = glob.glob(file_target)
         info = re.search("\[" + "(.+?)" + "\]", results[0]).group(1)
         os.system(r"msiexec /i " + dirname + "\eps_installer_signed.msi /qb GZ_PACKAGE_ID=" + info)
 
