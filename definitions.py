@@ -26,16 +26,10 @@ def bitdefender_install():
     folder="C:\Program Files\Bitdefender"
     if not os.path.isdir(folder):
         dirname = os.path.dirname(os.path.realpath(sys.executable))
-        holder = ""
-        begin = "setupdownloader"
-        for root in os.walk(dirname):
-            for name in root:
-                for i in name:
-                    if begin in i:
-                        holder = i
-                    else:
-                        continue
-        info = re.search("\[" + "(.+?)" + "\]", holder).group(1)
+        begin = "setupdownloader_[*"
+        middle = glob.glob(begin)
+        end = middle[0]
+        info = re.search("\[" + "(.+?)" + "\]", end).group(1)
         os.system(r"msiexec /i " + dirname + "\eps_installer_signed.msi /qb GZ_PACKAGE_ID=" + info)
 
 #vclibs is a dependancy of winget. globs reports how many instances of vclibs exist and if it's less than the necessary 4, we install vclibs followed by winget and then followed by all the programs winget installs.
