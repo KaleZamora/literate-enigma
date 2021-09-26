@@ -1,6 +1,5 @@
 # InstallerScript
 Side project for work that streamlines our new machine / user setup.
-
 Requirements to build:
 
 >= Python 3.x
