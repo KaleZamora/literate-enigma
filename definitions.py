@@ -6,46 +6,20 @@
 import subprocess
 import os
 import glob
-import InstallScript_Online
 from getpass import getpass
 import ctypes
 import re
 import sys
 
-workingdir = "C:\\UTIL\\project\\"
 
-
-if not os.path.isdir(workingdir):
-
-    os.mkdir(workingdir)
-
-os.chdir(workingdir)    
-
-base_url = r"https://raw.githubusercontent.com/BoomEarth/InstallScript-Online/main/Payloads/"
-dirname = os.getcwd() + "\\"
-
-agent_path = [base_url + ""]
-
-bitdefender_url1 = base_url + r"Bitdefender/eps_installer_signed.msi"
-bitdefender_url2 = base_url + r""
-bitdefender_paths = [bitdefender_url1,bitdefender_url2]
-
-office_url1 = base_url + r"Office/Configuration_test.xml"
-office_url2 = base_url + r"Office/setup.exe"
-office_paths = [office_url1,office_url2]
-
-fta_path = [base_url + "defaultsetup.ps1", base_url + "setfta.ps1"]
-
-winget_url1 = base_url + r"Winget/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"
-winget_url2 = base_url + r"Winget/Microsoft.VCLibs.x64.14.00.Desktop.appx"
-winget_paths = [winget_url1,winget_url2]
+dirname = os.getcwd()
 
 #folder is assigned the path to screenconnect client but with a wildcard symbol (*). glob then treats that as a wildcard, searches the directory for anything matching screen connect client and reports the output.
 #if nothing matches the query, the next step is to install the agent.
 
 def agent_install():
-    
     folder="C:\Program Files (x86)\ScreenConnect Client*"
+    
     if not glob.glob(folder,recursive=False):
         os.system(r"msiexec /i " + dirname + "\Agent_Install.msi /qb") 
 
@@ -60,9 +34,6 @@ def bitdefender_install():
 
 #vclibs is a dependancy of winget. globs reports how many instances of vclibs exist and if it's less than the necessary 4, we install vclibs followed by winget and then followed by all the programs winget installs.
 def applications_install():
-    
-    InstallScript_Online.downloader(winget_paths, dirname)
-    
     folder="C:\Program Files\WindowsApps\Microsoft.VCLibs*"
     
     if len(glob.glob(folder,recursive=False)) < 4:
@@ -72,8 +43,6 @@ def applications_install():
 
 #call to cmd to run setup.exe to install office by first downloading the files and then installing them.
 def office_install():
-    InstallScript_Online.downloader(office_paths, dirname)
-    os.system(dirname + r"\setup.exe /download " + dirname + "\Configuration_test.xml")
     os.system(dirname + r"\setup.exe /configure " + dirname + "\Configuration_test.xml")
     
 def network_settings():
@@ -120,10 +89,12 @@ def create_user():
     pass_key=getpass("Please enter the user's password: ")
     subprocess.call(r"powershell.exe New-LocalUser "+ username + " -Password (ConvertTo-SecureString " +pass_key+ " -AsPlainText -Force) -FullName '" + fname + " " + lname + "'; Add-LocalGroupMember -Group 'Users' -Member " + username + ";",shell=True)
     flag = 1
+
     while flag != 0:
+
         yn = input("Do you want to make this user an administrator? Y/N: ").lower()
         if yn == "y":
-            subprocess.call("powershell.exe Add-LocalGroupMember -Group 'Administrators' -Member '" +username+ "'")
+            subprocess.call("powershell.exe AddLocalGroupMember -Group 'Administrators' -Member '" +username+ "'")
             flag = 0
         elif yn == "n":
             print("Skipping admin elevation...")
@@ -136,10 +107,11 @@ def create_user():
 #defaults here meaning use adobe for default pdf reader, use chrome for html, use outlook for mail.to items etc. 
 #currently, windows fights back and resets defaults on occasion for arbitrary reasons.
 def apply_defaults(username):
-    InstallScript_Online.downloader(fta_path,dirname)
+
     current_computer_name=((subprocess.check_output(r"powershell.exe [System.Net.Dns]::GetHostByName($env:computerName).hostname", shell=True)).decode('utf-8')).strip()
-    action=r"(New-ScheduledTaskAction -execute powershell.exe -Argument " + dirname + "defaultsetup.ps1)"
+    action=r"(New-ScheduledTaskAction -execute powershell.exe -Argument " + dirname + "\defaultsetup.ps1)"
     trigger=r"(New-ScheduledTaskTrigger -atlogon)"
+    credentials=r"-Credential (New-Object System.Management.Automation.PSCredential " +str(current_computer_name)+"\\"+str(username[0])+",(ConvertTo-SecureString " +str(username[1])+ " -AsPlainText -Force))"
     principal=r"(New-ScheduledTaskPrincipal -UserId "+username[0]+" -LogonType ServiceAccount)"
     arguments=r"register-scheduledtask -action "+action+" -trigger "+trigger+" -principal "+principal+" -taskname User_Defaults -taskpath defaults -description fta_scheduled_task"
     
@@ -175,11 +147,11 @@ def powersettings():
     subprocess.call("powercfg /x processor-throttle-dc none")
 
 #ctypes is used here to check to see if the user is running the program as admin. Need to stdout a message that tells the user to try again as admin.
-# def is_admin():
-    # try:
-        # return ctypes.windll.shell32.IsUserAnAdmin()
-    # except:
-        # return False
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
 
 #default network settings are applied.
 def netmenu():
@@ -274,6 +246,6 @@ def restart_menu():
         else:
             print("Invalid choice. Please try again..")
             
-# def myexcepthook(type, value, traceback, oldhook=sys.excepthook):
-    # oldhook(type, value, traceback)
-    # input("Press RETURN. ")    # use input() in Python 3.x
+def myexcepthook(type, value, traceback, oldhook=sys.excepthook):
+    oldhook(type, value, traceback)
+    input("Press RETURN. ")    # use input() in Python 3.x
