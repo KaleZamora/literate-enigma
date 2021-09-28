@@ -89,7 +89,9 @@ def create_user():
     pass_key=getpass("Please enter the user's password: ")
     subprocess.call(r"powershell.exe New-LocalUser "+ username + " -Password (ConvertTo-SecureString " +pass_key+ " -AsPlainText -Force) -FullName '" + fname + " " + lname + "'; Add-LocalGroupMember -Group 'Users' -Member " + username + ";",shell=True)
     flag = 1
-    while flag2 != 0:
+
+    while flag != 0:
+
         yn = input("Do you want to make this user an administrator? Y/N: ").lower()
         if yn == "y":
             subprocess.call("powershell.exe AddLocalGroupMember -Group 'Administrators' -Member '" +username+ "'")
@@ -240,7 +242,7 @@ def restart_menu():
             flag = 0
         elif yn == "n":
             print("Skipping restart...")
-            flag4 = 0
+            flag = 0
         else:
             print("Invalid choice. Please try again..")
             
