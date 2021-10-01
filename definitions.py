@@ -109,7 +109,6 @@ def apply_defaults(username):
     current_computer_name=((subprocess.check_output(r"powershell.exe [System.Net.Dns]::GetHostByName($env:computerName).hostname", shell=True)).decode('utf-8')).strip()
     action=r"(New-ScheduledTaskAction -execute powershell.exe -Argument " + dirname + "\defaultsetup.ps1)"
     trigger=r"(New-ScheduledTaskTrigger -atlogon)"
-    credentials=r"-Credential (New-Object System.Management.Automation.PSCredential " +str(current_computer_name)+"\\"+str(username[0])+",(ConvertTo-SecureString " +str(username[1])+ " -AsPlainText -Force))"
     principal=r"(New-ScheduledTaskPrincipal -UserId "+username[0]+" -LogonType ServiceAccount)"
     arguments=r"register-scheduledtask -action "+action+" -trigger "+trigger+" -principal "+principal+" -taskname User_Defaults -taskpath defaults -description fta_scheduled_task"
     
@@ -247,3 +246,17 @@ def restart_menu():
 def myexcepthook(type, value, traceback, oldhook=sys.excepthook):
     oldhook(type, value, traceback)
     input("Press RETURN. ")    # use input() in Python 3.x
+
+def file_verification():
+    files = ["setupdownloader*", "Agent*", "setup.exe", "Microsoft.D*", "Microsoft.V*", "eps*", "Office", "Config*"]
+    needed = len(files)
+    counter = 0
+    for i in files:
+        sear = glob.glob(i)
+        if sear == []:
+            print("File missing, please unpack again")
+            input("Press Enter to Continue.")
+            exit()
+        else:
+            counter = counter + 1
+    print(str(counter) + "/" + str(needed) + " Files verified, continuing with program.")

@@ -5,6 +5,9 @@ import sys
 sys.excepthook = definitions.myexcepthook
 
 if definitions.is_admin():
+
+    definitions.file_verification()
+    
     value = definitions.menu()
 
     if value == "1":
