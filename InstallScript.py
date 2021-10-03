@@ -34,7 +34,7 @@ if definitions.is_admin():
     
     elif value == "7":
         print("Goodbye!")
-        exit()
+        quit()
       
     elif value == "8":
         print("testing configurations")
@@ -67,4 +67,3 @@ if definitions.is_admin():
 else:
     # Re-run the program with admin rights
     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv[1:]), None, 1)
-
