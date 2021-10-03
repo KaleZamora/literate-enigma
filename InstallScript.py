@@ -5,6 +5,9 @@ import sys
 sys.excepthook = definitions.myexcepthook
 
 if definitions.is_admin():
+
+    definitions.file_verification()
+    
     value = definitions.menu()
 
     if value == "1":
@@ -64,3 +67,4 @@ if definitions.is_admin():
 else:
     # Re-run the program with admin rights
     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv[1:]), None, 1)
+
