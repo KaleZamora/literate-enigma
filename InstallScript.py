@@ -34,7 +34,7 @@ if definitions.is_admin():
     
     elif value == "7":
         print("Goodbye!")
-        quit()
+        sys.exit()
       
     elif value == "8":
         print("testing configurations")
