@@ -10,6 +10,7 @@ from getpass import getpass
 import ctypes
 import re
 import sys
+import time
 
 
 dirname = os.getcwd()
@@ -89,7 +90,9 @@ def create_user():
     pass_key=getpass("Please enter the user's password: ")
     subprocess.call(r"powershell.exe New-LocalUser "+ username + " -Password (ConvertTo-SecureString " +pass_key+ " -AsPlainText -Force) -FullName '" + fname + " " + lname + "'; Add-LocalGroupMember -Group 'Users' -Member " + username + ";",shell=True)
     flag = 1
+
     while flag != 0:
+
         yn = input("Do you want to make this user an administrator? Y/N: ").lower()
         if yn == "y":
             subprocess.call("powershell.exe AddLocalGroupMember -Group 'Administrators' -Member '" +username+ "'")
@@ -247,16 +250,67 @@ def myexcepthook(type, value, traceback, oldhook=sys.excepthook):
     oldhook(type, value, traceback)
     input("Press RETURN. ")    # use input() in Python 3.x
 
+"""
+file_verification takes the data stored in files and checks if it exists in the current working directory. If it's in the directory, it prints a 'found' or a 'missing.' 
+A final tally is done to show the user how many files are missing out of the len(files) that's needed and then exits due to missing files breaking functionality.
+"""
+
 def file_verification():
-    files = ["setupdownloader*", "Agent*", "setup.exe", "Microsoft.D*", "Microsoft.V*", "eps*", "Office", "Config*"]
+    
+    """
+    files is a dictionary type that stores a description of the necessary files for installer to work. needed stores the length of files, keys the keys from files, values the values from files, 
+    and terminal stores the size of the terminal being used.
+    """
+    
+    files = {'Bitdefender Agent': "setupdownloader*", 'Automate Agent': "Agent*", 'Office setup executable': "setup.exe", 
+            'Winget': "Microsoft.D*", 'Winget Dependancy': "Microsoft.V*", 'BitDefender MSI Wrapper': "eps*", 
+            'Office Bin Files': "Office", 'Office Configuration XML': "Config*", 'defaultsetup.ps1': "defaultsetup.ps1", 'setfta.ps1': "setfta.ps1"}
+    
     needed = len(files)
+    keys = list(files.keys())
+    values = files.values()
     counter = 0
-    for i in files:
-        sear = glob.glob(i)
-        if sear == []:
-            print("File missing, please unpack again")
-            input("Press Enter to Continue.")
-            exit()
+    terminal = os.get_terminal_size()
+    
+    """
+    A for loop is used to iterate through values and pass each value to glob to find. If it doesn't exist it prints the name of the description and formats it with a right adjust and periods
+    that fill in the space. The padding is dynamic and depends on the columns in the current terminal. The size of the columns need to be adjusted to account for the length of the descriptor and the
+    apostrophes used hence the +2 and the len(keys[counter]). Counter will dictate what descriptor to print in the list 'keys.' Keys was assigned a list of keys from the dictionary 'files.'
+    """
+    
+    for i in values:
+        
+        if not glob.glob(i):
+            
+            """
+            string formatting is used here in the {:.>{padding}}.format. the period represents the filler. The bracket represents which direction the str will be (it's pointing to the right, there's
+            also up (^) and left (<)). padding represents how many characters to the right the target word will be pushed. It's dynamic currently. The first parameter fed to 'format' is our word 'missing' or
+            'found' below. In short, missing or found is pushed to the right (the length of the terminal adjusted for the descriptor and apostrophes) and the gap is filled with periods.
+            """
+            
+            print("'" + keys[counter] + "'" + '{:.>{padding}}'.format("missing", padding=terminal.columns-(len(keys[counter])+2)))
+            needed -= 1
+        
         else:
-            counter = counter + 1
-    print(str(counter) + "/" + str(needed) + " Files verified, continuing with program.")
+        
+            print("'" + keys[counter] + "'" + '{:.>{padding}}'.format("found", padding=terminal.columns-(len(keys[counter])+2)))
+            
+        counter += 1 
+    
+    """
+    if needed never got sutracted due to missing files and it equals the length of 'files' then everything is there and the program can continue
+    """
+    
+    if needed == len(files):
+        
+        print("\nFiles verified. Continuing..")
+        
+    else:
+    
+        """
+        A final check to let the user know what's missing and why it's exiting.
+        """
+        
+        print("\n" + str(needed) + "/" + str(len(files)) + " Files found. Unable to continue.")
+        input("Press any key to exit...")
+        exit()
