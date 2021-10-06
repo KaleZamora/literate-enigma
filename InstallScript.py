@@ -62,6 +62,10 @@ if definitions.is_admin():
     #Computer rename
     definitions.comp_name_menu()
 
+    #SMB Configuration
+    definitions.smb_menu()
+
+    #Restart computer
     definitions.restart_menu()
 
 else:

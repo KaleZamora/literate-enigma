@@ -313,4 +313,21 @@ def file_verification():
         
         print("\n" + str(needed) + "/" + str(len(files)) + " Files found. Unable to continue.")
         input("Press any key to exit...")
-        exit()
+        sys.exit()
+
+def smb_menu():
+    flag = 1
+    while flag != 0:
+        yn = input("Would you like to configure SMB1 now? Y/N: ").lower()
+        if yn == "y":
+            print("SMB1 Configuring now...")
+            subprocess.call(r"powershell.exe 'dism /online /Enable-Feature /FeatureName:SMB1Protocol-Client'")
+            subprocess.call(r"powershell.exe 'dism /online /Enable-Feature /FeatureName:SMB1Protocol-Server'")
+            subprocess.call(r"powershell.exe 'dism /online /Disable-Feature /FeatureName:SMB1Protocol-Deprecation'")
+            print("SMB1 Configured.")
+            flag = 0
+        elif yn == "n":
+            print("Skipping restart...")
+            flag = 0
+        else:
+            print("Invalid choice. Please try again..")
