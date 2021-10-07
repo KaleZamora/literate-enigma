@@ -321,6 +321,8 @@ def smb_menu():
         yn = input("Would you like to configure SMB1 now? Y/N: ").lower()
         if yn == "y":
             print("SMB1 Configuring now...")
+            subprocess.call(r"powershell.exe Enable-WindowsOptionalFeature -Online -FeatureName 'SMB1Protocol'")
+            subprocess.call(r"powershell.exe Get-WindowsOptionalFeature -Online -FeatureName 'SMB1Protocol'")
             subprocess.call(r"powershell.exe dism /online /Enable-Feature /FeatureName:SMB1Protocol-Client")
             subprocess.call(r"powershell.exe dism /online /Enable-Feature /FeatureName:SMB1Protocol-Server")
             subprocess.call(r"powershell.exe dism /online /Disable-Feature /FeatureName:SMB1Protocol-Deprecation")
