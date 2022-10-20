@@ -16,4 +16,4 @@ The EXE you can then place wherever and run it as admin.
 
 You can also check the releases for the latest stable release with a pre-compiled exe.
 
-By Zachary Knight and Gabriel Hererra with GUI done by Jimson Whiskeyman
+By Zachary Knight and Gabriel Hererra
